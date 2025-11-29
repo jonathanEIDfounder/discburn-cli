@@ -275,6 +275,69 @@
       "result": "success",
       "id": "audit-1764418984729",
       "timestamp": "2025-11-29T12:23:04.729Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "STATUS",
+      "actor": "user",
+      "details": {
+        "duration": 386
+      },
+      "result": "success",
+      "id": "audit-1764420239613",
+      "timestamp": "2025-11-29T12:43:59.613Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "STATUS",
+      "actor": "user",
+      "details": {
+        "duration": 425
+      },
+      "result": "success",
+      "id": "audit-1764420244760",
+      "timestamp": "2025-11-29T12:44:04.760Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "QPPRS",
+      "actor": "user",
+      "target": "manifest",
+      "details": {
+        "duration": 3546
+      },
+      "result": "success",
+      "id": "audit-1764420252254",
+      "timestamp": "2025-11-29T12:44:12.254Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "HELM",
+      "actor": "user",
+      "target": "activate",
+      "details": {
+        "duration": 1
+      },
+      "result": "success",
+      "id": "audit-1764420263765",
+      "timestamp": "2025-11-29T12:44:23.765Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "MESH",
+      "actor": "user",
+      "target": "providers",
+      "details": {
+        "duration": 2
+      },
+      "result": "success",
+      "id": "audit-1764420267093",
+      "timestamp": "2025-11-29T12:44:27.093Z"
     }
   ]
 }
