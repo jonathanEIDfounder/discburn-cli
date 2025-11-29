@@ -2,7 +2,44 @@
  * USB Signal Adapter
  * Direct bidirectional communication through USB circuit
  * Phone <-> Anker Hub <-> HP DVD557s
+ * 
+ * SECURITY HELM ACTIVE:
+ * - Only accepts incoming signals from verified DVD557s device
+ * - Blocks automated script injections
+ * - Blocks WebSocket connections
+ * - Validates all signal authenticity
  */
+
+const ALLOWED_DEVICE_ID = 'HP-DVD557s';
+const ALLOWED_SOURCES = ['dvd557s', 'HP-DVD557s', 'dvd557s_driver'];
+
+// Security Helm Configuration
+const HELM = {
+  active: true,
+  blockWebSockets: true,
+  blockScriptInjection: true,
+  onlyDVD557s: true,
+  maxSignalAge: 30000, // 30 seconds max age
+  rateLimitPerMinute: 60,
+  blockedPatterns: [
+    /eval\s*\(/i,
+    /Function\s*\(/i,
+    /<script/i,
+    /javascript:/i,
+    /on\w+\s*=/i,
+    /websocket/i,
+    /ws:\/\//i,
+    /wss:\/\//i,
+    /new\s+WebSocket/i,
+    /\.connect\s*\(/i,
+    /socket\.io/i,
+  ],
+};
+
+const signalRateTracker: { count: number; resetTime: number } = {
+  count: 0,
+  resetTime: Date.now() + 60000,
+};
 
 interface SignalPacket {
   type: 'command' | 'status' | 'ack' | 'data';
@@ -10,6 +47,72 @@ interface SignalPacket {
   timestamp: number;
   payload: any;
   checksum: string;
+  source?: string;
+  deviceId?: string;
+}
+
+interface SecurityResult {
+  allowed: boolean;
+  reason?: string;
+}
+
+function validateSignalSecurity(signal: SignalPacket): SecurityResult {
+  if (!HELM.active) return { allowed: true };
+
+  // Check source is DVD557s only
+  if (HELM.onlyDVD557s) {
+    const source = signal.source || signal.payload?.source || '';
+    const deviceId = signal.deviceId || signal.payload?.deviceId || '';
+    
+    if (!ALLOWED_SOURCES.includes(source) && !ALLOWED_SOURCES.includes(deviceId)) {
+      return { allowed: false, reason: 'BLOCKED: Source not DVD557s' };
+    }
+  }
+
+  // Check signal age
+  if (Date.now() - signal.timestamp > HELM.maxSignalAge) {
+    return { allowed: false, reason: 'BLOCKED: Signal too old (replay attack prevention)' };
+  }
+
+  // Rate limiting
+  if (Date.now() > signalRateTracker.resetTime) {
+    signalRateTracker.count = 0;
+    signalRateTracker.resetTime = Date.now() + 60000;
+  }
+  signalRateTracker.count++;
+  if (signalRateTracker.count > HELM.rateLimitPerMinute) {
+    return { allowed: false, reason: 'BLOCKED: Rate limit exceeded' };
+  }
+
+  // Check for script injection patterns
+  if (HELM.blockScriptInjection) {
+    const payloadStr = JSON.stringify(signal.payload || {});
+    for (const pattern of HELM.blockedPatterns) {
+      if (pattern.test(payloadStr)) {
+        return { allowed: false, reason: `BLOCKED: Script injection detected (${pattern})` };
+      }
+    }
+  }
+
+  // Block WebSocket patterns
+  if (HELM.blockWebSockets) {
+    const payloadStr = JSON.stringify(signal.payload || {});
+    if (/websocket|ws:\/\/|wss:\/\/|socket\.io/i.test(payloadStr)) {
+      return { allowed: false, reason: 'BLOCKED: WebSocket connection attempt' };
+    }
+  }
+
+  // Verify checksum
+  const expectedChecksum = generateChecksum(signal.payload);
+  if (signal.checksum !== expectedChecksum) {
+    return { allowed: false, reason: 'BLOCKED: Invalid checksum (tampering detected)' };
+  }
+
+  return { allowed: true };
+}
+
+function logSecurityEvent(event: string, details?: any) {
+  console.log(`[HELM] ${new Date().toISOString()} ${event}`, details || '');
 }
 
 interface DeviceState {
@@ -122,12 +225,28 @@ export async function receiveSignals(): Promise<SignalPacket[]> {
         s.timestamp > state.lastSignal
       ) || [];
       
-      if (newSignals.length > 0) {
-        responseBuffer.push(...newSignals);
-        state.lastSignal = Math.max(...newSignals.map((s: SignalPacket) => s.timestamp));
+      // HELM: Security validation for each signal
+      const validatedSignals: SignalPacket[] = [];
+      for (const signal of newSignals) {
+        const security = validateSignalSecurity(signal);
+        if (security.allowed) {
+          validatedSignals.push(signal);
+          logSecurityEvent('ALLOWED', { source: signal.source, type: signal.type });
+        } else {
+          logSecurityEvent('BLOCKED', { 
+            reason: security.reason, 
+            source: signal.source,
+            payload: signal.payload 
+          });
+        }
       }
       
-      return newSignals;
+      if (validatedSignals.length > 0) {
+        responseBuffer.push(...validatedSignals);
+        state.lastSignal = Math.max(...validatedSignals.map((s: SignalPacket) => s.timestamp));
+      }
+      
+      return validatedSignals;
     }
   } catch {}
   
@@ -183,4 +302,46 @@ export async function establishBidirectionalChannel(): Promise<{
     receive: receiveSignals,
     state: getDeviceState,
   };
+}
+
+// ============================================
+// HELM SECURITY CONTROLS
+// ============================================
+
+export function getHelmStatus() {
+  return {
+    active: HELM.active,
+    settings: {
+      blockWebSockets: HELM.blockWebSockets,
+      blockScriptInjection: HELM.blockScriptInjection,
+      onlyDVD557s: HELM.onlyDVD557s,
+      maxSignalAge: HELM.maxSignalAge,
+      rateLimitPerMinute: HELM.rateLimitPerMinute,
+    },
+    stats: {
+      signalsThisMinute: signalRateTracker.count,
+      resetIn: Math.max(0, signalRateTracker.resetTime - Date.now()),
+    },
+    allowedSources: ALLOWED_SOURCES,
+  };
+}
+
+export function activateHelm() {
+  HELM.active = true;
+  logSecurityEvent('HELM ACTIVATED', getHelmStatus());
+  return getHelmStatus();
+}
+
+export function deactivateHelm() {
+  HELM.active = false;
+  logSecurityEvent('HELM DEACTIVATED');
+  return getHelmStatus();
+}
+
+export function setHelmOption(option: keyof typeof HELM, value: any) {
+  if (option in HELM) {
+    (HELM as any)[option] = value;
+    logSecurityEvent(`HELM CONFIG: ${option} = ${value}`);
+  }
+  return getHelmStatus();
 }
