@@ -7,7 +7,7 @@ interface ParsedCommand {
   originalInput: string;
 }
 
-const SYSTEM_PROMPT = `You are a command parser for the DiscBurn Administrative Platform.
+const SYSTEM_PROMPT = `You are a command parser for the DiscBurn Administrative Platform with Q++RS Ultimate AI Mesh.
 
 Parse user input into structured commands. Return JSON only.
 
@@ -24,6 +24,9 @@ Available intents:
 - execute: Execute a burn job and sync to OneDrive after completion
 - package: Create a burn-ready package in OneDrive (download and burn on any PC)
 - admin: Administrative functions (target can be: audit, config, registry)
+- helm: Security controls (target can be: activate, deactivate, status, on, off)
+- mesh: Q++RS AI Mesh commands (target can be: status, route, providers)
+- qpprs: Q++RS Ultimate commands (target can be: manifest, propagate)
 - help: Show available commands
 - clear: Clear burn queue
 - unknown: Cannot understand the command
@@ -38,6 +41,9 @@ Examples:
 "cancel job123" -> {"intent": "cancel", "target": "job123"}
 "send status" -> {"intent": "send", "target": "status"}
 "admin audit" -> {"intent": "admin", "target": "audit"}
+"helm activate" -> {"intent": "helm", "target": "activate"}
+"mesh status" -> {"intent": "mesh", "target": "status"}
+"qpprs manifest" -> {"intent": "qpprs", "target": "manifest"}
 "help" -> {"intent": "help"}
 
 Return ONLY valid JSON: {"intent": "...", "target": "...", "parameters": {...}}`;
@@ -143,6 +149,35 @@ function fallbackParse(input: string): ParsedCommand {
   
   if (lower === 'package' || lower.includes('create package') || lower.includes('make iso')) {
     return { intent: 'package', originalInput: input };
+  }
+  
+  // Q++RS Ultimate Commands
+  if (lower.startsWith('helm')) {
+    const target = lower.replace('helm', '').trim() || 'status';
+    return { intent: 'helm', target, originalInput: input };
+  }
+  
+  if (lower.startsWith('mesh')) {
+    const target = lower.replace('mesh', '').trim() || 'status';
+    return { intent: 'mesh', target, originalInput: input };
+  }
+  
+  if (lower.startsWith('qpprs') || lower.startsWith('q++rs')) {
+    const target = lower.replace('qpprs', '').replace('q++rs', '').trim() || 'manifest';
+    return { intent: 'qpprs', target, originalInput: input };
+  }
+  
+  if (lower.includes('activate helm') || lower.includes('security on')) {
+    return { intent: 'helm', target: 'activate', originalInput: input };
+  }
+  
+  if (lower.includes('ai mesh') || lower.includes('providers')) {
+    return { intent: 'mesh', target: 'providers', originalInput: input };
+  }
+  
+  if (lower.includes('manifest') || lower.includes('propagate')) {
+    const target = lower.includes('propagate') ? 'propagate' : 'manifest';
+    return { intent: 'qpprs', target, originalInput: input };
   }
   
   return { intent: 'unknown', originalInput: input };
