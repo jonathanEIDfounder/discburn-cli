@@ -1,0 +1,280 @@
+{
+  "entries": [
+    {
+      "level": "info",
+      "category": "command",
+      "action": "STATUS",
+      "actor": "user",
+      "details": {
+        "duration": 365
+      },
+      "result": "success",
+      "id": "audit-1764417045575",
+      "timestamp": "2025-11-29T11:50:45.575Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "all",
+      "details": {
+        "duration": 2035
+      },
+      "result": "success",
+      "id": "audit-1764417057185",
+      "timestamp": "2025-11-29T11:50:57.185Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "UNKNOWN",
+      "actor": "user",
+      "details": {
+        "duration": 0
+      },
+      "result": "failure",
+      "id": "audit-1764417060804",
+      "timestamp": "2025-11-29T11:51:00.804Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "ADMIN",
+      "actor": "user",
+      "target": "audit",
+      "details": {
+        "duration": 7
+      },
+      "result": "success",
+      "id": "audit-1764417111944",
+      "timestamp": "2025-11-29T11:51:51.944Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "HELP",
+      "actor": "user",
+      "details": {
+        "duration": 0
+      },
+      "result": "success",
+      "id": "audit-1764417190561",
+      "timestamp": "2025-11-29T11:53:10.561Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "ADMIN",
+      "actor": "user",
+      "target": "config",
+      "details": {
+        "duration": 1
+      },
+      "result": "success",
+      "id": "audit-1764417199867",
+      "timestamp": "2025-11-29T11:53:19.867Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "all",
+      "details": {
+        "duration": 2086
+      },
+      "result": "success",
+      "id": "audit-1764417281304",
+      "timestamp": "2025-11-29T11:54:41.304Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "all",
+      "details": {
+        "duration": 1844
+      },
+      "result": "success",
+      "id": "audit-1764417286517",
+      "timestamp": "2025-11-29T11:54:46.517Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "ADMIN",
+      "actor": "user",
+      "target": "audit",
+      "details": {
+        "duration": 4
+      },
+      "result": "success",
+      "id": "audit-1764417289851",
+      "timestamp": "2025-11-29T11:54:49.851Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "WATCH",
+      "actor": "user",
+      "details": {
+        "duration": 2687
+      },
+      "result": "success",
+      "id": "audit-1764417777603",
+      "timestamp": "2025-11-29T12:02:57.603Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "HELP",
+      "actor": "user",
+      "details": {
+        "duration": 0
+      },
+      "result": "success",
+      "id": "audit-1764417781222",
+      "timestamp": "2025-11-29T12:03:01.222Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "STATUS",
+      "actor": "user",
+      "details": {
+        "duration": 416
+      },
+      "result": "success",
+      "id": "audit-1764417789707",
+      "timestamp": "2025-11-29T12:03:09.707Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "SEND",
+      "actor": "user",
+      "target": "status",
+      "details": {
+        "duration": 1097
+      },
+      "result": "success",
+      "id": "audit-1764417823371",
+      "timestamp": "2025-11-29T12:03:43.371Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "WATCH",
+      "actor": "user",
+      "details": {
+        "duration": 2927
+      },
+      "result": "success",
+      "id": "audit-1764417874811",
+      "timestamp": "2025-11-29T12:04:34.811Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "all",
+      "details": {
+        "duration": 6210
+      },
+      "result": "success",
+      "id": "audit-1764418098854",
+      "timestamp": "2025-11-29T12:08:18.854Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "AUTOMATE",
+      "actor": "user",
+      "target": "monitor",
+      "details": {
+        "duration": 1244
+      },
+      "result": "success",
+      "id": "audit-1764418219795",
+      "timestamp": "2025-11-29T12:10:19.795Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "priority",
+      "details": {
+        "duration": 2369
+      },
+      "result": "success",
+      "id": "audit-1764418306164",
+      "timestamp": "2025-11-29T12:11:46.164Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "BURN_TO_DISC",
+      "actor": "user",
+      "target": "send",
+      "details": {
+        "duration": 3673
+      },
+      "result": "success",
+      "id": "audit-1764418319232",
+      "timestamp": "2025-11-29T12:11:59.232Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "WATCH",
+      "actor": "user",
+      "details": {
+        "duration": 1307
+      },
+      "result": "success",
+      "id": "audit-1764418330375",
+      "timestamp": "2025-11-29T12:12:10.375Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "EXECUTE",
+      "actor": "user",
+      "target": "",
+      "details": {
+        "duration": 39441
+      },
+      "result": "success",
+      "id": "audit-1764418529624",
+      "timestamp": "2025-11-29T12:15:29.624Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "WATCH",
+      "actor": "user",
+      "details": {
+        "duration": 4506
+      },
+      "result": "success",
+      "id": "audit-1764418544339",
+      "timestamp": "2025-11-29T12:15:44.339Z"
+    },
+    {
+      "level": "info",
+      "category": "command",
+      "action": "STATUS",
+      "actor": "user",
+      "details": {
+        "duration": 376
+      },
+      "result": "success",
+      "id": "audit-1764418984729",
+      "timestamp": "2025-11-29T12:23:04.729Z"
+    }
+  ]
+}
