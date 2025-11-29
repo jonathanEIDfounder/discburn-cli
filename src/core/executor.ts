@@ -5,9 +5,10 @@ import { uploadToSovereignCapsule, checkSovereignCapsuleConnection, getSovereign
 import { addToHistory, getSavedCommands } from '../storage/fileStorage';
 import { createManifest, transitionState, MANIFEST_VERSION } from './manifest';
 import { logAudit, getConfig, getAuditLog, getCommandRegistry } from './admin';
-import { establishBidirectionalChannel, sendBurnCommand, sendCancel, sendStatusRequest, receiveSignals, getDeviceState, probeConnection } from '../adapters/usb-signal';
+import { establishBidirectionalChannel, sendBurnCommand, sendCancel, sendStatusRequest, receiveSignals, getDeviceState, probeConnection, getHelmStatus, activateHelm, deactivateHelm } from '../adapters/usb-signal';
 import { runSingleBurn, getExecutorState } from './burn-executor';
 import { generateBurnPackage, createBurnScript } from './iso-generator';
+import { getAIMesh, getRegistry, exportIntegrationManifest } from './qpprs-mesh';
 
 interface CommandResult {
   success: boolean;
@@ -76,6 +77,18 @@ export async function executeCommand(intent: string, target?: string, parameters
       
       case 'clear':
         result = { success: true, message: 'Burn queue cleared.' };
+        break;
+      
+      case 'helm':
+        result = await executeHelm(target);
+        break;
+      
+      case 'mesh':
+        result = await executeMesh(target, parameters);
+        break;
+      
+      case 'qpprs':
+        result = await executeQPPRS(target);
         break;
       
       default:
@@ -733,4 +746,194 @@ async function scanWorkspaceFiles(): Promise<string[]> {
   
   await scan(process.cwd());
   return files;
+}
+
+// ============================================
+// HELM SECURITY COMMANDS
+// ============================================
+
+async function executeHelm(target?: string): Promise<CommandResult> {
+  const action = target?.toLowerCase() || 'status';
+  
+  switch (action) {
+    case 'activate':
+    case 'on':
+      const activated = activateHelm();
+      return {
+        success: true,
+        message: `
+HELM SECURITY ACTIVATED
+=======================
+WebSocket Blocking: ${activated.settings.blockWebSockets ? 'ON' : 'OFF'}
+Script Injection Block: ${activated.settings.blockScriptInjection ? 'ON' : 'OFF'}
+DVD557s Only: ${activated.settings.onlyDVD557s ? 'ON' : 'OFF'}
+Rate Limit: ${activated.settings.rateLimitPerMinute}/min
+Signal Age Limit: ${activated.settings.maxSignalAge}ms
+`,
+        data: activated,
+      };
+    
+    case 'deactivate':
+    case 'off':
+      const deactivated = deactivateHelm();
+      return {
+        success: true,
+        message: 'HELM SECURITY DEACTIVATED - All signals will be accepted',
+        data: deactivated,
+      };
+    
+    case 'status':
+    default:
+      const status = getHelmStatus();
+      return {
+        success: true,
+        message: `
+HELM SECURITY STATUS
+====================
+Active: ${status.active ? 'YES' : 'NO'}
+WebSocket Blocking: ${status.settings.blockWebSockets ? 'ON' : 'OFF'}
+Script Injection Block: ${status.settings.blockScriptInjection ? 'ON' : 'OFF'}
+DVD557s Only: ${status.settings.onlyDVD557s ? 'ON' : 'OFF'}
+Rate Limit: ${status.settings.rateLimitPerMinute}/min
+Signals This Minute: ${status.stats.signalsThisMinute}
+Allowed Sources: ${status.allowedSources.join(', ')}
+`,
+        data: status,
+      };
+  }
+}
+
+// ============================================
+// Q++RS AI MESH COMMANDS
+// ============================================
+
+async function executeMesh(target?: string, parameters?: Record<string, string>): Promise<CommandResult> {
+  const action = target?.toLowerCase() || 'status';
+  const mesh = getAIMesh();
+  
+  switch (action) {
+    case 'status':
+      const status = mesh.getStatus();
+      const providerList = Object.entries(status.providers)
+        .map(([id, p]: [string, any]) => `  ${p.available ? '[OK]' : '[--]'} ${p.name}`)
+        .join('\n');
+      
+      return {
+        success: true,
+        message: `
+Q++RS AI MESH STATUS
+====================
+Status: ${status.mesh_status.toUpperCase()}
+Owner: ${status.owner}
+Total Providers: ${status.total_providers}
+
+PROVIDERS:
+${providerList}
+`,
+        data: status,
+      };
+    
+    case 'route':
+      const provider = parameters?.provider || 'openai';
+      const prompt = parameters?.prompt || 'Hello, this is a test from Q++RS mesh.';
+      const result = await mesh.route(prompt, provider);
+      
+      return {
+        success: result.status === 'success',
+        message: result.status === 'success'
+          ? `[${result.provider}/${result.model}]: ${result.response?.substring(0, 500) || 'No response'}`
+          : `Mesh route failed: ${result.message}`,
+        data: result,
+      };
+    
+    case 'providers':
+      const registry = getRegistry();
+      const providers = registry.listProviders();
+      const list = providers
+        .map(p => `${p.status === 'connected' ? '[CONN]' : '[----]'} ${p.name} (${p.models.length} models)`)
+        .join('\n');
+      
+      return {
+        success: true,
+        message: `
+Q++RS AI MESH PROVIDERS
+=======================
+${list}
+`,
+        data: providers,
+      };
+    
+    default:
+      return {
+        success: false,
+        message: `Unknown mesh command: ${action}. Try: status, route, providers`,
+      };
+  }
+}
+
+async function executeQPPRS(target?: string): Promise<CommandResult> {
+  const action = target?.toLowerCase() || 'manifest';
+  
+  switch (action) {
+    case 'manifest':
+      const manifest = exportIntegrationManifest();
+      
+      // Save to OneDrive
+      try {
+        await uploadToOneDrive('qpprs/manifest.json', JSON.stringify(manifest, null, 2));
+      } catch {}
+      
+      return {
+        success: true,
+        message: `
+Q++RS ULTIMATE MANIFEST
+=======================
+Framework: ${manifest.framework}
+Version: ${manifest.version}
+Owner: ${manifest.owner.name} (${manifest.owner.email})
+
+Platform: ${manifest.platform_binding.platform}
+Integration: ${manifest.platform_binding.integration_type}
+Auto-Configured: ${manifest.platform_binding.auto_configured.join(', ')}
+
+Providers: ${manifest.registry.total_providers}
+Mesh Status: ${manifest.mesh_status.mesh_status}
+
+Sealed: ${manifest.sealed_at}
+Immutable: ${manifest.immutable}
+`,
+        data: manifest,
+      };
+    
+    case 'propagate':
+      const mesh = getAIMesh();
+      const capsule = {
+        id: `capsule-${Date.now()}`,
+        type: 'Q++RS_TRANSFER',
+        owner: 'Jonathan Sherman (JTSQ)',
+        timestamp: new Date().toISOString(),
+        payload: exportIntegrationManifest(),
+      };
+      
+      const result = await mesh.propagateCapsule(capsule);
+      
+      return {
+        success: true,
+        message: `
+Q++RS CAPSULE PROPAGATED
+========================
+Capsule ID: ${result.capsule_id}
+Status: ${result.propagation_status}
+Targets: ${Object.keys(result.targets).join(', ')}
+Timestamp: ${result.timestamp}
+`,
+        data: result,
+      };
+    
+    default:
+      return {
+        success: false,
+        message: `Unknown Q++RS command: ${action}. Try: manifest, propagate`,
+      };
+  }
 }
